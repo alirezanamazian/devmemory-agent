@@ -129,20 +129,6 @@ class MemoryRepository:
             {"score": new_importance, "id": memory_id},
         )
 
-    async def delete_below_threshold(self, user_id: str, threshold: float) -> int:
-        result = await self.session.execute(
-            text("""
-                WITH deleted AS (
-                    DELETE FROM memories
-                    WHERE user_id = :user_id AND importance_score < :threshold
-                    RETURNING id
-                )
-                SELECT count(*) FROM deleted
-            """),
-            {"user_id": user_id, "threshold": threshold},
-        )
-        return result.scalar_one()
-
     async def delete_by_id(self, memory_id: str) -> None:
         await self.session.execute(
             text("DELETE FROM memories WHERE id = :id"),

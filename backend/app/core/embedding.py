@@ -31,21 +31,6 @@ class EmbeddingService:
             logger.error("Embedding request failed: %s", e)
             raise
 
-    async def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        """Batch embedding — Qwen supports up to 25 texts per call."""
-        if not texts:
-            return []
-        try:
-            response = await self._client.embeddings.create(
-                model=settings.QWEN_EMBEDDING_MODEL,
-                input=texts,
-            )
-            # API returns results in arbitrary order — re-sort by index to match input order
-            return [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
-        except Exception as e:
-            logger.error("Batch embedding request failed (%d texts): %s", len(texts), e)
-            raise
-
     async def rerank(self, query: str, documents: List[str]) -> List[float]:
         """
         Two-stage retrieval: call qwen3-rerank to reorder candidates by semantic relevance.
