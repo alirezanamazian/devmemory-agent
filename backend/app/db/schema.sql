@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS memories (
     importance_score FLOAT NOT NULL DEFAULT 0.5,
     decay_rate FLOAT NOT NULL DEFAULT 0.1,
     access_count INTEGER DEFAULT 0,
-    embedding vector(1536),
+    embedding vector(1024),
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     last_accessed TIMESTAMPTZ DEFAULT NOW(),
