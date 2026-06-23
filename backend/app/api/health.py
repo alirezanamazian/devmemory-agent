@@ -1,7 +1,7 @@
 import logging
 
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from sqlalchemy import text
 
 from app.config import settings
@@ -12,8 +12,12 @@ router = APIRouter()
 
 
 @router.get("/health")
-async def health_check():
-    """Ping DB and Qwen API — judges need to verify the stack is live."""
+async def health_check(response: Response):
+    """
+    Ping DB and Qwen API — judges need to verify the stack is live.
+    Returns HTTP 503 when the DB is unreachable so container healthchecks
+    (which check the status code, not the JSON body) actually catch it.
+    """
     db_status = "disconnected"
     qwen_status = "unreachable"
 
@@ -34,6 +38,9 @@ async def health_check():
                 qwen_status = "reachable"
     except Exception as e:
         logger.warning("Qwen health check failed: %s", e)
+
+    if db_status != "connected":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
     return {
         "status": "ok" if db_status == "connected" else "degraded",

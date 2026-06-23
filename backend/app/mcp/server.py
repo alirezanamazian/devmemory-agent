@@ -95,4 +95,6 @@ async def memory_stats(
 
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    # http, not stdio — this runs as a long-lived docker-compose service exposed
+    # on a port, not spawned as a subprocess by a local MCP client.
+    mcp.run(transport="http", host="0.0.0.0", port=8001)
