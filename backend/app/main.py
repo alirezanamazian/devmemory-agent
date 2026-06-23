@@ -3,7 +3,9 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import chat, health, memories
 from app.container import Container
+from app.db.database import init_db
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,7 +23,14 @@ app.add_middleware(
 )
 
 container = Container()
+container.wire(modules=["app.api.chat", "app.api.memories"])
 app.container = container
 
-# Routers (app.api.*) and the MCP server get wired into the container
-# once they exist — see container.wiring_config.
+app.include_router(health.router, tags=["health"])
+app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
+app.include_router(memories.router, prefix="/api/v1", tags=["memories"])
+
+
+@app.on_event("startup")
+async def startup():
+    await init_db()
