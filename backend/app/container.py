@@ -11,8 +11,10 @@ from app.core.memory_engine import MemoryEngine
 
 
 class Container(containers.DeclarativeContainer):
-    # Modules get added here as they're built (app.api.*, app.mcp.server) —
+    # Modules get added here as they're built (app.api.*) —
     # wire() will import each one, so listing a module that doesn't exist yet breaks startup.
+    # app.mcp.server resolves providers directly instead of via @inject/Provide — FastMCP's
+    # Pydantic-based schema generation can't handle a Provide[...] default on a non-Pydantic type.
     wiring_config = containers.WiringConfiguration(modules=[])
 
     qwen_client = providers.Singleton(
