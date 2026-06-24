@@ -39,6 +39,9 @@ class MemoryExtractor:
         project_id: Optional[str] = None,
     ) -> List[MemoryCreate]:
         """Extract memorable facts from a conversation turn without prompting the user."""
+        if not conversation:
+            return []
+
         conv_text = "\n".join(f"{msg.role.upper()}: {msg.content}" for msg in conversation)
 
         try:

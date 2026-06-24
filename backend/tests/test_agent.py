@@ -157,3 +157,13 @@ async def test_chat_continues_when_save_memory_fails(mock_qwen_client, mock_memo
 
     assert response.response == "Still answered."
     assert response.memories_extracted == 0
+
+
+@pytest.mark.asyncio
+async def test_extract_memories_skips_qwen_call_for_empty_conversation(mock_qwen_client):
+    extractor = MemoryExtractor(mock_qwen_client)
+
+    result = await extractor.extract_memories([], "test_user")
+
+    assert result == []
+    mock_qwen_client.chat.completions.create.assert_not_called()
