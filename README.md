@@ -1,12 +1,8 @@
 # DevMemory Agent
 
-An AI coding assistant with persistent memory across developer sessions — built on Qwen Cloud and deployed on Alibaba Cloud.
+Most AI coding assistants forget everything the moment the session ends. DevMemory doesn't — it's an AI assistant built on Qwen Cloud and deployed on Alibaba Cloud that carries what it learns about you from one session into the next.
 
-## Hackathon
-
-**QwenCloud Global AI Hackathon** — Track 1: MemoryAgent
-
-DevMemory remembers what you've told it across sessions — your tool preferences, the decisions you've made, the bugs you've fixed — and uses that memory to give better, less repetitive answers over time, without you ever having to ask it to "remember."
+Tell it your tool preferences, the architectural decisions you make, the bugs you fix — it picks those up on its own, no explicit "remember this" needed. Every memory is embedded, semantically searched and reranked, and weighed against an Ebbinghaus-style decay curve, so the things you actually use stay sharp and the things you don't fade out — the same way a human collaborator's memory works.
 
 ## Demo
 
@@ -52,7 +48,15 @@ curl http://localhost:8000/health
 
 ### Getting a Qwen Cloud API key
 
-Sign up at [qwencloud.com](https://qwencloud.com) and use the free quota, or request the hackathon's $40 Qwen Cloud voucher if you're not eligible for the free trial.
+1. Sign up at [qwencloud.com](https://qwencloud.com) and check your free quota.
+2. Generate an API key from your account dashboard.
+3. Paste it into `.env`:
+
+   ```env
+   QWEN_API_KEY=sk-your-key-here
+   ```
+
+`QWEN_BASE_URL` and the model names (`qwen3.7-max`, `text-embedding-v4`, `qwen3-rerank`) already default to the right values in `.env.example` — no other changes needed to get running.
 
 ## API Reference
 
