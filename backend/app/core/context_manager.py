@@ -1,7 +1,10 @@
+import logging
 from typing import List
 
 from app.config import settings
 from app.models.memory import MemoryResponse, MemorySearchResult
+
+logger = logging.getLogger(__name__)
 
 
 class ContextWindowManager:
@@ -30,6 +33,14 @@ class ContextWindowManager:
         for result in ranked:
             token_cost = len(result.memory.content) // self.CHARS_PER_TOKEN
             if token_cost > token_budget_remaining:
+                if token_cost > max_tokens:
+                    # Logged at warning, not just skipped silently — a memory this
+                    # large will never fit regardless of what else is in context.
+                    logger.warning(
+                        "Memory %s (~%d tokens) exceeds the entire context budget (%d) "
+                        "and will always be skipped — consider summarizing it.",
+                        result.memory.id, token_cost, max_tokens,
+                    )
                 continue
             selected.append(result.memory)
             token_budget_remaining -= token_cost
