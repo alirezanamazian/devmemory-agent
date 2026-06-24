@@ -17,7 +17,7 @@ class MemoryCreate(BaseModel):
     user_id: str
     project_id: Optional[str] = None
     session_id: Optional[str] = None
-    content: str
+    content: str = Field(min_length=1)
     memory_type: MemoryType = MemoryType.GENERAL
     importance_score: float = Field(default=0.5, ge=0.0, le=1.0)
 
@@ -54,7 +54,7 @@ class ChatRequest(BaseModel):
     user_id: str
     project_id: Optional[str] = None
     session_id: Optional[str] = None
-    message: str
+    message: str = Field(min_length=1)
 
 
 class ChatResponse(BaseModel):
