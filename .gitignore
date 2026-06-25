@@ -219,3 +219,8 @@ __marimo__/
 
 # Node / frontend
 node_modules/
+.next/
+next-env.d.ts
+
+# graphify
+graphify-out/
