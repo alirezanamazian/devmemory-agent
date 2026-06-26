@@ -172,3 +172,45 @@ async def test_extract_memories_skips_qwen_call_for_empty_conversation(mock_qwen
 
     assert result == []
     mock_qwen_client.chat.completions.create.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_chat_retries_then_falls_back_on_empty_completion(mock_qwen_client, mock_memory_engine):
+    ctx = ContextWindowManager()
+    extractor = MemoryExtractor(mock_qwen_client)
+    extractor.extract_memories = AsyncMock(return_value=[])
+
+    # Qwen sometimes returns an empty completion with no tool call and no
+    # error — the agent should retry once, then fall back to a non-empty
+    # message rather than showing the user a blank response.
+    mock_qwen_client.chat.completions.create = AsyncMock(
+        side_effect=[_completion(""), _completion("")]
+    )
+
+    agent = DevMemoryAgent(mock_memory_engine, ctx, extractor, mock_qwen_client)
+    request = ChatRequest(user_id="test_user", message="hello")
+
+    response = await agent.chat(request)
+    await agent.last_extraction_task
+
+    assert response.response == "Got it — noted."
+    assert mock_qwen_client.chat.completions.create.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_chat_uses_retry_result_when_first_completion_is_empty(mock_qwen_client, mock_memory_engine):
+    ctx = ContextWindowManager()
+    extractor = MemoryExtractor(mock_qwen_client)
+    extractor.extract_memories = AsyncMock(return_value=[])
+
+    mock_qwen_client.chat.completions.create = AsyncMock(
+        side_effect=[_completion(""), _completion("Second try worked.")]
+    )
+
+    agent = DevMemoryAgent(mock_memory_engine, ctx, extractor, mock_qwen_client)
+    request = ChatRequest(user_id="test_user", message="hello")
+
+    response = await agent.chat(request)
+    await agent.last_extraction_task
+
+    assert response.response == "Second try worked."

@@ -104,6 +104,16 @@ class DevMemoryAgent:
             logger.error("Background memory extraction failed: %s", task.exception())
 
     async def _call_qwen_with_tools(self, system_prompt: str, request: ChatRequest) -> str:
+        # qwen3.7-max occasionally returns an empty completion with no tool
+        # call and no error — retry once before falling back to a generic
+        # acknowledgment so the user never sees a blank response bubble.
+        text = await self._complete_with_tools_once(system_prompt, request)
+        if not text.strip():
+            logger.warning("Qwen returned an empty completion, retrying once")
+            text = await self._complete_with_tools_once(system_prompt, request)
+        return text.strip() or "Got it — noted."
+
+    async def _complete_with_tools_once(self, system_prompt: str, request: ChatRequest) -> str:
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": request.message},
