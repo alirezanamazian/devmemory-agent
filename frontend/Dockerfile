@@ -17,4 +17,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 EXPOSE 3000
+# The standalone server.js binds to os.hostname() by default, which inside a
+# container resolves to the container ID, not localhost — that fails our own
+# healthcheck (curl localhost:3000) even though external access still works.
+# Force it to listen on all interfaces.
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 CMD ["node", "server.js"]
