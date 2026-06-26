@@ -26,17 +26,6 @@ CREATE TABLE IF NOT EXISTS memories (
     expires_at TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_id VARCHAR(255) UNIQUE NOT NULL,
-    user_id VARCHAR(255) NOT NULL,
-    project_id VARCHAR(255),
-    messages JSONB DEFAULT '[]',
-    memory_ids UUID[] DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 CREATE INDEX IF NOT EXISTS idx_memories_user_id ON memories(user_id);
 CREATE INDEX IF NOT EXISTS idx_memories_project_id ON memories(project_id);
 CREATE INDEX IF NOT EXISTS idx_memories_importance ON memories(importance_score DESC);
