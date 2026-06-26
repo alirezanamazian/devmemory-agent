@@ -135,7 +135,7 @@ Recalling a memory boosts its importance by +0.2 (capped at 1.0) — frequently-
 
 Deployed end-to-end on Alibaba Cloud: backend + frontend + MCP server on an ECS instance (docker-compose), persistent memory storage on ApsaraDB RDS for PostgreSQL (pgvector enabled).
 
-Proof of Alibaba Cloud service usage (ECS + RDS + Qwen Cloud API, each verified independently): [alibaba_cloud_proof/alibaba_proof.py](alibaba_cloud_proof/alibaba_proof.py). This needs the deployer's own credentials (`ALIBABA_ACCESS_KEY_ID/SECRET`, `QWEN_API_KEY`, `DATABASE_URL`) to run, so it's not something a judge can execute themselves — its output is included as proof alongside the submission.
+Proof of Alibaba Cloud service usage (ECS + RDS + Qwen Cloud API, each verified independently): [alibaba_cloud_proof/alibaba_proof.py](alibaba_cloud_proof/alibaba_proof.py).
 
 ```bash
 cd alibaba_cloud_proof && python alibaba_proof.py
