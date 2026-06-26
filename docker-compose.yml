@@ -36,8 +36,11 @@ services:
       - "8000:8000"
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://devmemory:devmemory_local@db:5432/devmemory
-      REDIS_URL: redis://redis:6379
+      # Falls back to the local `db`/`redis` containers when .env doesn't set
+      # these — set DATABASE_URL in .env to point at a managed DB (e.g. RDS)
+      # without ever touching this file.
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://devmemory:devmemory_local@db:5432/devmemory}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     depends_on:
       db:
         condition: service_healthy
@@ -80,8 +83,11 @@ services:
       - "8001:8001"
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://devmemory:devmemory_local@db:5432/devmemory
-      REDIS_URL: redis://redis:6379
+      # Falls back to the local `db`/`redis` containers when .env doesn't set
+      # these — set DATABASE_URL in .env to point at a managed DB (e.g. RDS)
+      # without ever touching this file.
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://devmemory:devmemory_local@db:5432/devmemory}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     depends_on:
       db:
         condition: service_healthy
