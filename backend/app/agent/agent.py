@@ -59,10 +59,11 @@ class DevMemoryAgent:
 
         response_text = await self._call_qwen_with_tools(system_prompt, request)
 
-        conversation = [
-            ChatMessage(role="user", content=request.message),
-            ChatMessage(role="assistant", content=response_text),
-        ]
+        # Only the user's own message is a source of new facts. The assistant's
+        # reply often restates memories already in storage (e.g. "here's a
+        # summary of everything you've told me") — feeding that back into the
+        # extractor re-saves the same facts as if they were new.
+        conversation = [ChatMessage(role="user", content=request.message)]
         # Extraction makes another Qwen call and embeds+saves each memory it
         # finds — none of that affects this response, so it runs after we
         # return instead of making the user wait on it.
