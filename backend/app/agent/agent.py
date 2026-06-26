@@ -1,5 +1,7 @@
+import asyncio
 import json
 import logging
+from typing import List, Optional
 from uuid import uuid4
 
 from openai import AsyncOpenAI
@@ -26,6 +28,9 @@ class DevMemoryAgent:
         self._ctx = context_manager
         self._extractor = extractor
         self._client = qwen_client
+        # Exposed so tests can await the background extraction task instead
+        # of racing it; not used by production code paths.
+        self.last_extraction_task: Optional["asyncio.Task[None]"] = None
 
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """
@@ -58,17 +63,14 @@ class DevMemoryAgent:
             ChatMessage(role="user", content=request.message),
             ChatMessage(role="assistant", content=response_text),
         ]
-        new_memories = await self._extractor.extract_memories(
-            conversation, request.user_id, request.project_id
+        # Extraction makes another Qwen call and embeds+saves each memory it
+        # finds — none of that affects this response, so it runs after we
+        # return instead of making the user wait on it.
+        task = asyncio.create_task(
+            self._extract_and_save(conversation, request.user_id, request.project_id)
         )
-
-        saved_count = 0
-        for mem in new_memories:
-            try:
-                await self._memory.save_memory(mem)
-                saved_count += 1
-            except Exception as e:
-                logger.warning("Failed to save extracted memory: %s", e)
+        task.add_done_callback(self._log_background_task_error)
+        self.last_extraction_task = task
 
         # Reinforce the top-5 memories we actually surfaced in this response
         for result in search_results[:5]:
@@ -81,8 +83,25 @@ class DevMemoryAgent:
             session_id=request.session_id or str(uuid4()),
             response=response_text,
             memories_used=selected_memories,
-            memories_extracted=saved_count,
+            # Extraction is now async — always 0 here, the saved memories show
+            # up in the memory panel once the background task finishes.
+            memories_extracted=0,
         )
+
+    async def _extract_and_save(
+        self, conversation: List[ChatMessage], user_id: str, project_id: Optional[str]
+    ) -> None:
+        new_memories = await self._extractor.extract_memories(conversation, user_id, project_id)
+        for mem in new_memories:
+            try:
+                await self._memory.save_memory(mem)
+            except Exception as e:
+                logger.warning("Failed to save extracted memory: %s", e)
+
+    @staticmethod
+    def _log_background_task_error(task: "asyncio.Task[None]") -> None:
+        if not task.cancelled() and task.exception():
+            logger.error("Background memory extraction failed: %s", task.exception())
 
     async def _call_qwen_with_tools(self, system_prompt: str, request: ChatRequest) -> str:
         messages = [

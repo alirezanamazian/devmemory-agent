@@ -33,6 +33,7 @@ async def test_chat_returns_response(mock_qwen_client, mock_memory_engine):
     request = ChatRequest(user_id="test_user", message="How do I use asyncpg?")
 
     response = await agent.chat(request)
+    await agent.last_extraction_task
 
     assert response.response == "Here is your answer."
     assert isinstance(response.session_id, str)
@@ -67,6 +68,7 @@ async def test_chat_uses_retrieved_memories(mock_qwen_client, mock_memory_engine
     request = ChatRequest(user_id="test_user", message="How should I connect to Postgres?")
 
     response = await agent.chat(request)
+    await agent.last_extraction_task
 
     assert len(response.memories_used) == 1
     assert response.memories_used[0].content == "User prefers asyncpg over psycopg2"
@@ -132,8 +134,9 @@ async def test_chat_extracts_and_saves_new_memories(mock_qwen_client, mock_memor
     request = ChatRequest(user_id="test_user", message="I like asyncpg")
 
     response = await agent.chat(request)
+    await agent.last_extraction_task
 
-    assert response.memories_extracted == 1
+    assert response.memories_extracted == 0  # extraction is async now
     mock_memory_engine.save_memory.assert_called_once()
 
 
@@ -154,9 +157,11 @@ async def test_chat_continues_when_save_memory_fails(mock_qwen_client, mock_memo
     request = ChatRequest(user_id="test_user", message="hello")
 
     response = await agent.chat(request)
+    await agent.last_extraction_task
 
     assert response.response == "Still answered."
     assert response.memories_extracted == 0
+    mock_memory_engine.save_memory.assert_called_once()
 
 
 @pytest.mark.asyncio
