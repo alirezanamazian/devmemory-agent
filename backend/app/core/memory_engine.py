@@ -11,6 +11,10 @@ from app.models.memory import MemoryCreate, MemoryResponse, MemorySearchResult
 
 logger = logging.getLogger(__name__)
 
+# Above this cosine similarity, treat a newly extracted memory as a
+# restatement of an existing one rather than a genuinely new fact.
+DUPLICATE_SIMILARITY_THRESHOLD = 0.93
+
 
 class MemoryEngine:
     def __init__(
@@ -24,12 +28,27 @@ class MemoryEngine:
         self._ctx = context_manager
 
     async def save_memory(self, memory: MemoryCreate) -> MemoryResponse:
-        """Embed content, set decay rate by type, store in pgvector."""
+        """Embed content, set decay rate by type, store in pgvector.
+
+        If a near-duplicate already exists for this user (the extractor often
+        restates the same fact across turns), reinforce it instead of
+        inserting a redundant row.
+        """
         embedding = await self._embed.embed(memory.content)
         decay_rate = self._decay.calculate_decay_rate_for_type(memory.memory_type.value)
 
         async with get_db() as session:
             repo = MemoryRepository(session)
+            existing = await repo.find_by_vector(
+                embedding, memory.user_id, memory.project_id, limit=1
+            )
+            if existing and existing[0][1] >= DUPLICATE_SIMILARITY_THRESHOLD:
+                duplicate, _ = existing[0]
+                logger.info(
+                    "Skipping duplicate memory for user %s (similarity to %s), reinforcing instead",
+                    memory.user_id, duplicate.id,
+                )
+                return await self.reinforce_memory(duplicate.id)
             return await repo.create(memory, embedding, decay_rate)
 
     async def search_memories(
