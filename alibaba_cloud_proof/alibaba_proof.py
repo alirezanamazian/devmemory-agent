@@ -15,11 +15,15 @@ Requires QWEN_API_KEY, ALIBABA_ACCESS_KEY_ID/SECRET, DATABASE_URL in the environ
 
 import os
 import sys
+from pathlib import Path
 
 from alibabacloud_ecs20140526 import models as ecs_models
 from alibabacloud_ecs20140526.client import Client as EcsClient
 from alibabacloud_tea_openapi import models as open_api_models
+from dotenv import load_dotenv
 from openai import OpenAI
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 def verify_qwen_cloud_api():
