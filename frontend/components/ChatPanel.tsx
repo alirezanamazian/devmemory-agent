@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { sendChatMessage } from "@/lib/api";
 
 interface DisplayMessage {
@@ -59,10 +61,16 @@ export function ChatPanel({ userId, onMessageSent }: { userId: string; onMessage
               className={
                 message.role === "user"
                   ? "inline-block bg-sky-600 text-white rounded-lg px-3 py-2 max-w-[80%]"
-                  : "inline-block bg-white border rounded-lg px-3 py-2 max-w-[80%]"
+                  : "inline-block bg-white border rounded-lg px-3 py-2 max-w-[80%] text-left"
               }
             >
-              {message.content}
+              {message.role === "assistant" ? (
+                <div className="prose prose-sm prose-slate max-w-none prose-p:my-1 prose-headings:my-2 prose-table:my-2">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                </div>
+              ) : (
+                message.content
+              )}
               {message.memoriesUsed ? (
                 <div className="text-xs text-slate-400 mt-1">used {message.memoriesUsed} memories</div>
               ) : null}
