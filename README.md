@@ -8,6 +8,8 @@ Tell it your tool preferences, the architectural decisions you make, the bugs yo
 
 🎥 _Demo video link — to be added before submission (max 3 minutes, YouTube/Vimeo/Youku)._
 
+🔗 _Live demo URL — to be added before submission (deployed on Alibaba Cloud ECS)._
+
 ## Architecture
 
 Full system diagrams (request flow + memory lifecycle): [docs/architecture.md](docs/architecture.md)
@@ -26,7 +28,7 @@ flowchart LR
 2. **Rerank** — candidates are reordered by `qwen3-rerank` for true semantic relevance, with decay applied so stale memories rank lower even if textually similar.
 3. **Fit** — the highest-value memories are greedily packed into an 8,000-token context budget and injected into the system prompt.
 4. **Respond** — `qwen3.7-max` answers using that context, with 4 custom tools (skills) it can call directly to recall, save, or search memory mid-conversation.
-5. **Remember** — after every turn, an extraction pass autonomously pulls out new preferences, decisions, bug fixes, and patterns — no explicit "remember this" required — and reinforces whichever memories were actually used.
+5. **Remember** — after the response is sent, a background extraction pass autonomously pulls new preferences, decisions, bug fixes, and patterns out of *your* message (never the assistant's own reply, to avoid re-saving facts it just recalled) — no explicit "remember this" required — and reinforces whichever memories were actually used. Near-duplicate extractions reinforce the existing memory instead of creating a new row.
 
 ## Quick Start
 
@@ -59,6 +61,15 @@ Then open [http://localhost:3000](http://localhost:3000) for the demo UI — ent
    ```
 
 `QWEN_BASE_URL` and the model names (`qwen3.7-max`, `text-embedding-v4`, `qwen3-rerank`) already default to the right values in `.env.example` — no other changes needed to get running.
+
+## Demo UI
+
+A single-page Next.js app (`frontend/`) split into a chat pane and a live memory panel:
+
+- **Chat** — markdown-rendered responses (headings, tables, code), with a "used N memories" tag whenever retrieval surfaced context for that turn.
+- **Memory panel** — stats (total / avg importance / at-risk), a live decay chart (each memory's importance recalculated client-side with the same Ebbinghaus formula as the backend, so bars visibly shrink between visits), and a card list with one-click delete per memory.
+
+Runs as its own docker-compose service on port 3000. For local dev without Docker: `cd frontend && npm install && npm run dev` (needs the backend running separately on `:8000`).
 
 ## API Reference
 
@@ -116,12 +127,15 @@ Recalling a memory boosts its importance by +0.2 (capped at 1.0) — frequently-
 | MCP Protocol | `mcp` / `fastmcp` |
 | Session Cache | Redis |
 | DI | `dependency-injector` |
+| Frontend | Next.js 14 (App Router) + TypeScript + Tailwind + Recharts |
 | Container | Docker + docker-compose |
 | Cloud | Alibaba Cloud ECS + RDS PostgreSQL |
 
 ## Alibaba Cloud Deployment
 
-Proof of Alibaba Cloud service usage (ECS + RDS + Qwen Cloud API, each verified independently): [alibaba_cloud_proof/alibaba_proof.py](alibaba_cloud_proof/alibaba_proof.py)
+Deployed end-to-end on Alibaba Cloud: backend + frontend + MCP server on an ECS instance (docker-compose), persistent memory storage on ApsaraDB RDS for PostgreSQL (pgvector enabled).
+
+Proof of Alibaba Cloud service usage (ECS + RDS + Qwen Cloud API, each verified independently): [alibaba_cloud_proof/alibaba_proof.py](alibaba_cloud_proof/alibaba_proof.py). This needs the deployer's own credentials (`ALIBABA_ACCESS_KEY_ID/SECRET`, `QWEN_API_KEY`, `DATABASE_URL`) to run, so it's not something a judge can execute themselves — its output is included as proof alongside the submission.
 
 ```bash
 cd alibaba_cloud_proof && python alibaba_proof.py

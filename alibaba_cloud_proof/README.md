@@ -18,14 +18,14 @@ cd alibaba_cloud_proof
 pip install -r ../backend/requirements.txt
 ```
 
-Set these in your environment (or `../.env`):
+Set these in `../.env` (loaded automatically — no need to `export` them) or your shell environment:
 
 ```bash
-export QWEN_API_KEY=your_qwen_api_key
-export ALIBABA_ACCESS_KEY_ID=your_access_key_id
-export ALIBABA_ACCESS_KEY_SECRET=your_access_key_secret
-export ALIBABA_REGION=ap-southeast-1
-export DATABASE_URL=postgresql+asyncpg://user:pass@your-rds-host:5432/devmemory
+QWEN_API_KEY=your_qwen_api_key
+ALIBABA_ACCESS_KEY_ID=your_access_key_id
+ALIBABA_ACCESS_KEY_SECRET=your_access_key_secret
+ALIBABA_REGION=us-east-1  # match the region your ECS/RDS instances are actually in
+DATABASE_URL=postgresql+asyncpg://user:pass@your-rds-host:5432/devmemory
 ```
 
 ```bash
