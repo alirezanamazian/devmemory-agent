@@ -55,6 +55,27 @@ services:
       start_period: 10s
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Browser-reachable backend URL, baked into the bundle at build time.
+        # Override at build time for production (e.g. the ECS host's public
+        # IP/domain) — "backend" is a Docker-internal hostname and won't
+        # resolve from the user's browser.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   mcp:
     build: ./backend
     ports:
