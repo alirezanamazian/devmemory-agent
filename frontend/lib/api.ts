@@ -57,3 +57,13 @@ export async function fetchMemoryStats(userId: string): Promise<MemoryStats> {
   }
   return res.json();
 }
+
+export async function deleteMemory(userId: string, memoryId: string): Promise<void> {
+  const res = await fetch(
+    `${API_URL}/api/v1/memories/${encodeURIComponent(userId)}/${encodeURIComponent(memoryId)}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to delete memory: ${res.status}`);
+  }
+}
