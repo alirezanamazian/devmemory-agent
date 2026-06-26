@@ -37,7 +37,7 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-This starts 4 services: `db` (PostgreSQL 16 + pgvector), `redis`, `backend` (FastAPI on :8000), and `mcp` (MCP server on :8001).
+This starts 5 services: `db` (PostgreSQL 16 + pgvector), `redis`, `backend` (FastAPI on :8000), `frontend` (demo UI on :3000), and `mcp` (MCP server on :8001).
 
 Verify it's up:
 
@@ -45,6 +45,8 @@ Verify it's up:
 curl http://localhost:8000/health
 # {"status":"ok","db":"connected","qwen":"reachable"}
 ```
+
+Then open [http://localhost:3000](http://localhost:3000) for the demo UI — enter a `user_id`, chat with the agent, and watch the memory panel populate and decay over time.
 
 ### Getting a Qwen Cloud API key
 
@@ -123,6 +125,12 @@ Proof of Alibaba Cloud service usage (ECS + RDS + Qwen Cloud API, each verified 
 
 ```bash
 cd alibaba_cloud_proof && python alibaba_proof.py
+```
+
+When deploying, set `NEXT_PUBLIC_API_URL` to the ECS instance's public IP/domain (e.g. `http://<ecs-ip>:8000`) before building the `frontend` image — it's baked into the browser bundle at build time, so the default `http://localhost:8000` only works for local docker-compose:
+
+```bash
+NEXT_PUBLIC_API_URL=http://<ecs-ip>:8000 docker-compose up --build
 ```
 
 ## Scalability & Productization
