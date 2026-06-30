@@ -6,9 +6,7 @@ Tell it your tool preferences, the architectural decisions you make, the bugs yo
 
 ## Demo
 
-🎥 _Demo video link — to be added before submission (max 3 minutes, YouTube/Vimeo/Youku)._
-
-🔗 _Live demo URL — to be added before submission (deployed on Alibaba Cloud ECS)._
+🎥 Watch the demo: https://youtu.be/4esHfUGIO48
 
 ## Architecture
 
@@ -82,9 +80,30 @@ Runs as its own docker-compose service on port 3000. For local dev without Docke
 | `POST` | `/api/v1/memories/{user_id}/forget` | Run Ebbinghaus decay, auto-forget memories below the importance threshold |
 | `GET` | `/api/v1/memories/{user_id}/stats` | Memory stats: totals, breakdown by type, at-risk count |
 
-## MCP Tools
+## MCP Integration
 
-DevMemory also runs as an MCP server (`app/mcp/server.py`, port 8001) so any MCP-compatible IDE or agent can use it directly:
+DevMemory runs as an MCP server (`app/mcp/server.py`, port 8001), so Claude Code, Claude Desktop, or any MCP-compatible IDE can connect to it directly. Memories built up through the chat UI and memories saved from your IDE share the same Alibaba Cloud database — context follows you across tools.
+
+**Connect to Claude Code:**
+
+```bash
+claude mcp add devmemory -- docker exec -i devmemory-mcp-1 python -m app.mcp.server
+```
+
+**Connect to Claude Desktop** — add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "devmemory": {
+      "command": "docker",
+      "args": ["exec", "-i", "devmemory-mcp-1", "python", "-m", "app.mcp.server"]
+    }
+  }
+}
+```
+
+Once connected, the agent has access to four tools:
 
 | Tool | Description |
 |---|---|
